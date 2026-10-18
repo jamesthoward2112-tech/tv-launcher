@@ -47,9 +47,10 @@ repository. No Gradle.
 - **Back:** from the grid or top bar returns to the dock; on the dock starts the screensaver.
 - **Gear key → quick settings:** a panel like Google TV's (time, volume, All settings,
   Screensaver, Inputs, Picture, Sound, Wi-Fi, Accessibility, Bluetooth) that opens over
-  whatever is playing, HDMI included. The firmware opens the Settings app on that key before
-  any app can intercept it, so `GearService` (an accessibility service that only watches
-  which window is in front) closes Settings and opens the panel; Settings flashes briefly.
+  whatever is playing, HDMI included. TCL's remote sends `KEYCODE_NOTIFICATION` for the gear,
+  which `GearService` (an accessibility service that filters only that key) catches. For
+  remotes that send `KEYCODE_SETTINGS`, the firmware opens the Settings app before any app
+  sees the key, so the service closes Settings and opens the panel (Settings flashes).
 - **Wi-Fi name:** Android reveals it only to apps with location permission (`install.sh`
   grants it) and only while Location is on.
 
