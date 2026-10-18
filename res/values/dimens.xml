@@ -1,0 +1,17 @@
+<resources>
+    <!-- The TV is 1920x1080 at density 320: a 960x540 dp canvas. -->
+    <dimen name="side">48dp</dimen>
+    <dimen name="tile_w">186dp</dimen>
+    <dimen name="tile_h">105dp</dimen>
+    <dimen name="tile_gap">20dp</dimen>
+    <!-- 4 tiles plus their trailing gaps: each column is tile + gap wide. -->
+    <dimen name="row_w">824dp</dimen>
+    <dimen name="tiles_x">78dp</dimen>
+    <dimen name="band_x">52dp</dimen>
+    <dimen name="band_w">856dp</dimen>
+    <dimen name="band_h">149dp</dimen>
+    <dimen name="band_bottom">30dp</dimen>
+    <dimen name="grid_pitch">155dp</dimen>
+    <dimen name="grid_top">580dp</dimen>
+    <dimen name="pill_h">34dp</dimen>
+</resources>

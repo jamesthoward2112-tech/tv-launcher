@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:clipChildren="false">
+    <View android:id="@+id/qs_shade" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="@drawable/qs_shade" />
+    <!-- A floating card like Google TV's, inset from the screen edges. -->
+    <LinearLayout android:id="@+id/qs_panel" android:layout_width="312dp" android:layout_height="wrap_content"
+        android:layout_gravity="end|top" android:layout_margin="16dp" android:background="@drawable/qs_panel"
+        android:orientation="vertical" android:paddingStart="14dp" android:paddingEnd="14dp"
+        android:paddingTop="22dp" android:paddingBottom="16dp" android:clipChildren="false" android:clipToPadding="false">
+        <TextView android:id="@+id/qs_date" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="2dp" android:textColor="#FFC4C7CC" android:textSize="14sp" />
+        <TextView android:id="@+id/qs_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="1dp" android:layout_marginTop="2dp" android:layout_marginBottom="16dp"
+            android:textColor="#FFF1F3F5" android:textSize="30sp" android:includeFontPadding="false" />
+        <LinearLayout android:id="@+id/qs_volume" android:layout_width="match_parent" android:layout_height="54dp"
+            android:background="@drawable/qs_tile" android:orientation="horizontal" android:gravity="center_vertical"
+            android:paddingStart="16dp" android:paddingEnd="16dp">
+            <ImageView android:id="@+id/qs_volume_icon" android:layout_width="20dp" android:layout_height="20dp"
+                android:src="@drawable/ic_volume" android:tint="#FFE3E5E8" />
+            <com.ambient.launcher.VolumeBar android:id="@+id/qs_volume_bar" android:layout_width="0dp"
+                android:layout_height="20dp" android:layout_weight="1" android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp" />
+            <TextView android:id="@+id/qs_volume_value" android:layout_width="28dp" android:layout_height="wrap_content"
+                android:gravity="end" android:textColor="#FFE3E5E8" android:textSize="15sp" />
+        </LinearLayout>
+        <!-- Tiles, two per row, filled in by QuickSettingsActivity; the Inputs list replaces them. -->
+        <LinearLayout android:id="@+id/qs_tiles" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginTop="10dp" android:clipChildren="false" />
+    </LinearLayout>
+</FrameLayout>

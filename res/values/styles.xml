@@ -1,0 +1,48 @@
+<resources>
+    <style name="Home" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    <!-- The quick settings panel: see-through, so the picture (HDMI too) stays behind it. -->
+    <style name="QuickSettings" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@style/QuickSettingsAnim</item>
+    </style>
+    <style name="QuickSettingsAnim">
+        <item name="android:activityOpenEnterAnimation">@anim/qs_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/none</item>
+        <item name="android:activityCloseEnterAnimation">@anim/none</item>
+        <item name="android:activityCloseExitAnimation">@anim/qs_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/qs_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/none</item>
+        <item name="android:taskCloseEnterAnimation">@anim/none</item>
+        <item name="android:taskCloseExitAnimation">@anim/qs_out</item>
+    </style>
+    <style name="Pill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/pill_h</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">13dp</item>
+        <item name="android:paddingEnd">15dp</item>
+        <item name="android:background">@drawable/pill</item>
+    </style>
+    <style name="PillIcon">
+        <item name="android:layout_width">16dp</item>
+        <item name="android:layout_height">16dp</item>
+        <item name="android:layout_marginEnd">7dp</item>
+        <item name="android:tint">#FFE8E8EC</item>
+    </style>
+    <style name="PillText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#FFE8E8EC</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:singleLine">true</item>
+    </style>
+</resources>

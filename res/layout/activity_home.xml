@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Everything lives in one tall "content" frame that slides up as focus moves into the grid.
+     Positions are absolute dp on the 960x540 canvas; see dimens.xml. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@android:color/black" android:clipChildren="false">
+
+    <!-- Photo background: two layers to cross-fade, a scrim that darkens toward the dock,
+         and a dim that deepens while the grid is in view. -->
+    <ImageView android:id="@+id/bg0" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="centerCrop" android:alpha="0" />
+    <ImageView android:id="@+id/bg1" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:scaleType="centerCrop" android:alpha="0" />
+    <View android:id="@+id/scrim" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="@drawable/scrim" />
+    <View android:id="@+id/dim" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="@android:color/black" android:alpha="0" />
+    <TextView android:id="@+id/credit" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end" android:layout_marginEnd="@dimen/side" android:layout_marginBottom="9dp"
+        android:textColor="#80FFFFFF" android:textSize="10sp" android:singleLine="true" />
+
+    <FrameLayout android:id="@+id/content" android:layout_width="match_parent" android:layout_height="1200dp"
+        android:clipChildren="false" android:clipToPadding="false">
+
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/side" android:layout_marginTop="24dp" android:orientation="vertical">
+            <TextView android:id="@+id/greeting" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="#FF9A9AA2" android:textSize="15sp" android:layout_marginStart="3dp" />
+            <TextView android:id="@+id/clock" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="#FFFFFFFF" android:textSize="68sp" android:includeFontPadding="false"
+                android:layout_marginTop="2dp" />
+            <TextView android:id="@+id/date" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="#FFC8C8CE" android:textSize="17sp" android:layout_marginStart="3dp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/pills" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="top|end" android:layout_marginEnd="@dimen/side" android:layout_marginTop="32dp"
+            android:orientation="horizontal" android:clipChildren="false">
+            <LinearLayout android:id="@+id/pill_inputs" style="@style/Pill">
+                <ImageView style="@style/PillIcon" android:src="@drawable/ic_input" />
+                <TextView style="@style/PillText" android:text="@string/inputs" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/pill_wifi" style="@style/Pill" android:layout_marginStart="10dp">
+                <ImageView style="@style/PillIcon" android:src="@drawable/ic_wifi" />
+                <TextView android:id="@+id/wifi_name" style="@style/PillText" android:text="@string/wifi"
+                    android:maxWidth="170dp" android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/pill_settings" style="@style/Pill" android:layout_marginStart="10dp">
+                <ImageView style="@style/PillIcon" android:src="@drawable/ic_settings" />
+                <TextView style="@style/PillText" android:text="@string/settings" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView android:id="@+id/weather" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="top|end" android:layout_marginEnd="50dp" android:layout_marginTop="80dp"
+            android:textColor="#FFDCDCE0" android:textSize="16sp" android:singleLine="true"
+            android:shadowColor="#99000000" android:shadowRadius="6" android:padding="4dp" />
+
+        <!-- The focused dock app's name over a soft glow; HomeActivity sizes the glow to the name. -->
+        <com.ambient.launcher.GlowView android:id="@+id/glow" android:layout_width="0dp" android:layout_height="0dp" />
+        <TextView android:id="@+id/title" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/tiles_x" android:layout_marginTop="300dp"
+            android:textColor="#FFF4F4F6" android:textSize="40sp" android:singleLine="true"
+            android:includeFontPadding="false" />
+
+        <FrameLayout android:id="@+id/band" android:layout_width="@dimen/band_w" android:layout_height="@dimen/band_h"
+            android:layout_marginStart="@dimen/band_x" android:layout_marginTop="361dp"
+            android:background="@drawable/dock_band" android:clipChildren="false">
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/dock"
+                android:layout_width="@dimen/row_w" android:layout_height="@dimen/tile_h"
+                android:layout_marginStart="26dp" android:layout_marginTop="22dp"
+                android:clipChildren="false" android:clipToPadding="false" android:overScrollMode="never" />
+        </FrameLayout>
+
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/grid"
+            android:layout_width="@dimen/row_w" android:layout_height="0dp"
+            android:layout_marginStart="@dimen/tiles_x" android:layout_marginTop="@dimen/grid_top"
+            android:clipChildren="false" android:clipToPadding="false" android:overScrollMode="never" />
+
+        <LinearLayout android:id="@+id/menu" android:layout_width="210dp" android:layout_height="wrap_content"
+            android:orientation="vertical" android:background="@drawable/menu_panel" android:padding="8dp"
+            android:visibility="gone" />
+
+        <com.ambient.launcher.GlassHighlight android:id="@+id/glass"
+            android:layout_width="match_parent" android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <!-- Shown while rearranging. -->
+    <TextView android:id="@+id/hint" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal" android:layout_marginBottom="6dp"
+        android:background="@drawable/pill" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:paddingTop="5dp" android:paddingBottom="6dp" android:textColor="#FFEDEDF0" android:textSize="13sp"
+        android:alpha="0" />
+</FrameLayout>
