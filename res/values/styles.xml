@@ -13,15 +13,16 @@
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:windowAnimationStyle">@style/QuickSettingsAnim</item>
     </style>
+    <!-- A quick fade in and out; nothing slides. -->
     <style name="QuickSettingsAnim">
-        <item name="android:activityOpenEnterAnimation">@anim/qs_in</item>
-        <item name="android:activityOpenExitAnimation">@anim/none</item>
-        <item name="android:activityCloseEnterAnimation">@anim/none</item>
-        <item name="android:activityCloseExitAnimation">@anim/qs_out</item>
-        <item name="android:taskOpenEnterAnimation">@anim/qs_in</item>
-        <item name="android:taskOpenExitAnimation">@anim/none</item>
-        <item name="android:taskCloseEnterAnimation">@anim/none</item>
-        <item name="android:taskCloseExitAnimation">@anim/qs_out</item>
+        <item name="android:activityOpenEnterAnimation">@anim/qs_fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/qs_stay</item>
+        <item name="android:activityCloseEnterAnimation">@anim/qs_stay</item>
+        <item name="android:activityCloseExitAnimation">@anim/qs_fade_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/qs_fade_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/qs_stay</item>
+        <item name="android:taskCloseEnterAnimation">@anim/qs_stay</item>
+        <item name="android:taskCloseExitAnimation">@anim/qs_fade_out</item>
     </style>
     <style name="Pill">
         <item name="android:layout_width">wrap_content</item>
