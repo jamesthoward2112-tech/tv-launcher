@@ -75,7 +75,8 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
             h.banner.setPadding(pad, pad / 2, pad, pad / 2);
             h.banner.setImageDrawable(a.icon);
         }
-        h.name.setText(a.label);
+        // An input tile's banner already shows its name.
+        h.name.setText(a.pkg.startsWith(App.INPUT) ? "" : a.label);
         binder.onBound(h, position);
     }
 

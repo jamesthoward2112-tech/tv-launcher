@@ -3,7 +3,7 @@
     <string name="inputs">Inputs</string>
     <string name="settings">Settings</string>
     <string name="wifi">Wi-Fi</string>
-    <string name="gear_service">Home: gear button</string>
+    <string name="gear_service">Home: remote buttons</string>
     <string name="quick_settings">Quick settings</string>
-    <string name="gear_description">Opens quick settings when you press the gear button on the remote.</string>
+    <string name="gear_description">Opens quick settings when you press the gear button on the remote, and keeps the TV remote from controlling the device on HDMI 1.</string>
 </resources>

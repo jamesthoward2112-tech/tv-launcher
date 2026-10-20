@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.ImageView;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
@@ -23,6 +24,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -36,6 +38,12 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import java.io.File;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -49,13 +57,8 @@ import java.util.concurrent.Executors;
  * Up from the dock reaches the top bar, and the ends of a row stop instead of wrapping.
  */
 public class HomeActivity extends Activity {
-    /**
-     * The default dock, left to right, until the user rearranges (then the saved order wins).
-     * Apps that are not installed are skipped.
-     */
-    private static final String[] DOCK = {
-        "com.google.android.youtube.tv", "com.netflix.ninja", "com.amazon.amazonvideo.livingroom", "com.tcl.tv",
-    };
+    /** The TV app, left out of the grid when the Live TV tile stands in for it. */
+    private static final String TV_APP = "com.tcl.tv";
     private static final int COLUMNS = 4, DOCK_SIZE = 4;
     private static final float TILE_SCALE = 1.08f, PILL_SCALE = 1.06f;
 
@@ -98,6 +101,10 @@ public class HomeActivity extends Activity {
     private LauncherSettings settings;
     private Backdrop backdrop;
     private TextView weather;
+    private LinearLayout agendaView;
+    /** The calendar feeds in config.json, and their events once loaded. */
+    private final List<String> icsUrls = new ArrayList<>();
+    private Agenda agenda;
     private View dim, credit, band;
     private double lat = Double.NaN, lon = Double.NaN;
     private ConnectivityManager connectivity;
@@ -119,6 +126,7 @@ public class HomeActivity extends Activity {
         wifiName = findViewById(R.id.wifi_name);
         menu = findViewById(R.id.menu);
         weather = findViewById(R.id.weather);
+        agendaView = findViewById(R.id.agenda);
         dim = findViewById(R.id.dim);
         credit = findViewById(R.id.credit);
         band = findViewById(R.id.band);
@@ -136,6 +144,8 @@ public class HomeActivity extends Activity {
         }
         backdrop = new Backdrop(this, findViewById(R.id.bg0), findViewById(R.id.bg1), (TextView) credit, settings, net);
         backdrop.setKey(config.optString("unsplashKey"));
+        JSONArray feeds = config.optJSONArray("icsUrls");
+        for (int i = 0; feeds != null && i < feeds.length(); i++) icsUrls.add(feeds.optString(i));
         styleBand();
         pills = new View[] {findViewById(R.id.pill_inputs), findViewById(R.id.pill_wifi), findViewById(R.id.pill_settings)};
 
@@ -199,20 +209,25 @@ public class HomeActivity extends Activity {
 
     private void loadApps() {
         loader.execute(() -> {
-            List<App> all = App.loadAll(this);
+            List<App> inputs = App.loadInputs(this), all = new ArrayList<>(inputs);
+            boolean live = false;
+            for (App a : inputs) live |= a.label.equals("Live TV");
+            for (App a : App.loadAll(this)) if (!(live && a.pkg.equals(TV_APP))) all.add(a);
             runOnUiThread(() -> showApps(all));
         });
     }
 
     private void showApps(List<App> all) {
         // Saved order first (minus uninstalled apps), then new ones by name. Before any
-        // rearranging, the default dock apps lead.
+        // rearranging, the inputs (first in all) fill the dock; an order saved before input
+        // tiles existed gets them in front too.
         String saved = prefs.getString("order", null);
         List<String> pkgs = new ArrayList<>();
         if (saved != null) {
             for (String s : saved.split(",")) if (!s.isEmpty()) pkgs.add(s);
-        } else {
-            for (String s : DOCK) pkgs.add(s);
+        }
+        if (saved == null || !saved.contains(App.INPUT)) {
+            for (int i = 0; i < all.size() && all.get(i).pkg.startsWith(App.INPUT); i++) pkgs.add(i, all.get(i).pkg);
         }
         List<App> rest = new ArrayList<>(all);
         order.clear();
@@ -531,8 +546,10 @@ public class HomeActivity extends Activity {
         }
 
         if (area == Area.DOCK) showTitle(dockAdapter.apps.get(dockIdx));
-        title.animate().alpha(area == Area.DOCK ? 1f : 0.35f).setDuration(250).start();
-        glow.animate().alpha(area == Area.DOCK ? 1f : 0.3f).setDuration(250).start();
+        // An input tile already carries its name, so the title and its glow step aside.
+        boolean input = titleText == null;
+        title.animate().alpha(input ? 0f : area == Area.DOCK ? 1f : 0.35f).setDuration(250).start();
+        glow.animate().alpha(input ? 0f : area == Area.DOCK ? 1f : 0.3f).setDuration(250).start();
 
         // The dock and top bar sit at the top; a grid row scrolls up to 230dp from the top,
         // which keeps the dock in view above the first row.
@@ -562,9 +579,11 @@ public class HomeActivity extends Activity {
         v.animate().scaleX(s).scaleY(s).setDuration(420).setInterpolator(Spring.INSTANCE).start();
     }
 
-    private String titleText;
+    private String titleText = "";
 
+    /** The dock app named in the title; null while an input tile is focused there. */
     private void showTitle(App a) {
+        if (a.pkg.startsWith(App.INPUT)) { titleText = null; return; }
         if (a.label.equals(titleText)) return;
         titleText = a.label;
         title.setText(a.label);
@@ -753,6 +772,107 @@ public class HomeActivity extends Activity {
                 : h < 22 ? "Good evening" : "Good night");
         clock.setText(DateFormat.format(DateFormat.is24HourFormat(this) ? "HH:mm" : "h:mm", now));
         date.setText(DateFormat.format(DateFormat.getBestDateTimePattern(Locale.getDefault(), "EEEEMMMMd"), now));
+        showAgenda();
+    }
+
+    // ---------------------------------------------------------------- calendar
+
+    private static final long CALENDAR_EVERY = 15 * 60_000L;
+    private static final int AGENDA_ROWS = 3;
+
+    /** Every 15 minutes while home is on screen; the last copy of the feeds shows at once. */
+    private final Runnable calendarTick = this::refreshCalendar;
+
+    private void refreshCalendar() {
+        ui.removeCallbacks(calendarTick);
+        if (!started || icsUrls.isEmpty()) return;
+        File cache = new File(getFilesDir(), "calendar.ics");
+        long due = cache.lastModified() + CALENDAR_EVERY - System.currentTimeMillis();
+        net.execute(() -> {
+            String text = null;
+            if (due <= 0) {
+                StringBuilder all = new StringBuilder();
+                for (String url : icsUrls) {
+                    try {
+                        String t = Net.get(url.replaceFirst("^webcal:", "https:"));
+                        if (t.contains("BEGIN:VCALENDAR")) all.append(t).append('\n');
+                    } catch (Exception e) {
+                        android.util.Log.w("Home", "calendar failed: " + e);
+                    }
+                }
+                if (all.length() > 0) {
+                    text = all.toString();
+                    try (java.io.FileOutputStream out = new java.io.FileOutputStream(cache)) {
+                        out.write(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            if (text == null && agenda == null && cache.exists()) {
+                try {
+                    text = new String(java.nio.file.Files.readAllBytes(cache.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+                } catch (Exception ignored) {
+                }
+            }
+            Agenda a = text != null ? new Agenda(text) : null;
+            ui.post(() -> {
+                if (a != null) agenda = a;
+                showAgenda();
+                if (started) ui.postDelayed(calendarTick, due > 0 ? due : CALENDAR_EVERY);
+            });
+        });
+    }
+
+    /**
+     * Today's events still to come, or else the next day within a week that has any: a label,
+     * then up to three rows of time and title. Redrawn each minute with the clock.
+     */
+    private void showAgenda() {
+        agendaView.setVisibility(agenda == null ? View.GONE : View.VISIBLE);
+        if (agenda == null) return;
+        ZoneId zone = ZoneId.systemDefault();
+        ZonedDateTime now = ZonedDateTime.now(zone);
+        LocalDate today = now.toLocalDate();
+        String label = "Today";
+        List<Agenda.Item> list = new ArrayList<>();
+        for (Agenda.Item o : agenda.on(today, zone)) if (o.allDay || o.end.isAfter(now)) list.add(o);
+        for (int i = 1; list.isEmpty() && i <= 7; i++) {
+            LocalDate day = today.plusDays(i);
+            list = agenda.on(day, zone);
+            label = i == 1 ? "Tomorrow" : day.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.getDefault());
+        }
+        agendaView.removeAllViews();
+        agendaView.addView(agendaText(list.isEmpty() ? "Nothing scheduled this week" : label, 13, 0xFF9A9AA2, 400));
+        DateTimeFormatter time = DateTimeFormatter.ofPattern(DateFormat.is24HourFormat(this) ? "H:mm" : "h:mm a");
+        for (int i = 0; i < Math.min(AGENDA_ROWS, list.size()); i++) {
+            Agenda.Item o = list.get(i);
+            boolean live = !o.allDay && !o.start.isAfter(now) && label.equals("Today");
+            LinearLayout row = new LinearLayout(this);
+            row.setPadding(0, dp(5), 0, 0);
+            // Times in a fixed-width column, so the titles line up after them.
+            TextView when = agendaText(o.allDay ? "All day" : live ? "Now" : time.format(o.start), 15,
+                    live ? 0xFFFFFFFF : 0xFFC8C8CE, live ? 500 : 300);
+            when.setLayoutParams(new LinearLayout.LayoutParams(dp(82), ViewGroup.LayoutParams.WRAP_CONTENT));
+            TextView what = agendaText(o.summary, 15, 0xFFF0F0F3, live ? 500 : 300);
+            what.setMaxWidth(dp(260));
+            row.addView(when);
+            row.addView(what);
+            agendaView.addView(row);
+        }
+        if (list.size() > AGENDA_ROWS)
+            agendaView.addView(agendaText("+" + (list.size() - AGENDA_ROWS) + " more", 13, 0xFF9A9AA2, 300));
+    }
+
+    private TextView agendaText(String text, int sp, int color, int weight) {
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextSize(sp);
+        t.setTextColor(color);
+        t.setTypeface(font(weight));
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.END);
+        t.setShadowLayer(dp(4), 0, 0, 0x99000000);
+        return t;
     }
 
     /** Network changes arrive as events; nothing polls. */
@@ -787,6 +907,7 @@ public class HomeActivity extends Activity {
         started = true;
         backdrop.start();
         refreshWeather();
+        refreshCalendar();
     }
 
     @Override
@@ -795,6 +916,7 @@ public class HomeActivity extends Activity {
         started = false;
         backdrop.stop();
         ui.removeCallbacks(weatherTick);
+        ui.removeCallbacks(calendarTick);
         super.onStop();
     }
 

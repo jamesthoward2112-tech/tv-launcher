@@ -15,7 +15,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** A launchable app: its TV banner (or icon), name, and a glow colour taken from the banner. */
+/**
+ * A launchable app: its TV banner (or icon), name, and a glow colour taken from the banner.
+ * TV inputs are tiles too, under the made-up package "input:" plus the input's id.
+ */
 final class App {
     final String pkg;
     final String label;
@@ -60,6 +63,23 @@ final class App {
         Collator c = Collator.getInstance();
         apps.sort((x, y) -> c.compare(x.label, y.label));
         return apps;
+    }
+
+    static final String INPUT = "input:";
+
+    /** HDMI 1 to 3 and Live TV, those the TV has, as tiles, each with its own colour. */
+    static List<App> loadInputs(Context ctx) {
+        List<App> tiles = new ArrayList<>();
+        int hdmi = 0;
+        for (Inputs in : Inputs.list(ctx)) {
+            boolean live = in.label.equals("Live TV");
+            if (!live && !(in.label.startsWith("HDMI ") && hdmi < 3)) continue;
+            int tint = live ? 0xFFFF6B5A : new int[] {0xFF5AA0FF, 0xFFA57CFF, 0xFF3FD1C0}[hdmi++];
+            tiles.add(new App(INPUT + in.id, in.label,
+                    new InputBanner(ctx, live ? R.drawable.ic_live_tv : R.drawable.ic_hdmi, in.label, tint),
+                    null, tint, in.intent));
+        }
+        return tiles;
     }
 
     /**

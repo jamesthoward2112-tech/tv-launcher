@@ -16,7 +16,7 @@ import java.util.List;
 final class Inputs {
     final String label;
     final Intent intent;
-    private final String id;
+    final String id;
 
     private Inputs(String id, String label, Intent intent) {
         this.id = id;

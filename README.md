@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/zhengnanli/tv-launcher/actions/workflows/build.yml/badge.svg)](https://github.com/zhengnanli/tv-launcher/actions/workflows/build.yml)
 
-A small, quiet home screen for Android TV / Google TV: a dock of four apps in a rounded
+A small, quiet home screen for Android TV / Google TV: a dock of four tiles in a rounded
 band, the rest in a 4-column grid below it, one glass highlight that springs between tiles,
 frosted pills for Inputs, Wi-Fi and Settings, and a quick settings panel on the remote's
 gear key.
@@ -30,7 +30,8 @@ builds install over each other. Without a key, `build.sh` falls back to a debug 
 it fetches RecyclerView and its AndroidX dependencies (and R8) from Google's Maven
 repository. No Gradle.
 
-- **Dock:** the packages in `HomeActivity.DOCK`, left to right.
+- **Dock:** HDMI 1–3 and Live TV, as tiles with their own icons that switch straight to the
+  input; the TV app's own tile is left out in favour of Live TV. Apps can be moved in like any tile.
 - **Keys:** Up/Down move one row; Up from the dock reaches the top bar; the ends of the top
   bar and of each row stop. The last focused tile is remembered.
 - **Inputs:** HDMI ports, AV (when the TV registers one) and Live TV, from the TV input
@@ -42,15 +43,24 @@ repository. No Gradle.
   Open-Meteo line under the pills. Both refresh only while home is on screen. The
   Unsplash key and `lat`/`lon` come from `config.json` in the app's files dir on the TV
   (`/sdcard/Android/data/com.ambient.launcher/files/`), pushed over adb.
+- **Calendar:** on the right under the weather (sharing its left edge), today's events still to come (or the next day within a
+  week that has any), up to three, from the published ICS feeds in `config.json`'s
+  `icsUrls`. Recurring events and Outlook's time zone names are handled as in the ambient
+  screensaver; feeds refresh every 15 minutes while home is on screen.
 - **Rearranging:** hold OK (or press Menu) on an app, move it with the arrows, OK to drop.
   Within the dock or grid it slides; across them it swaps, so the dock stays full.
 - **Back:** from the grid or top bar returns to the dock; on the dock starts the screensaver.
 - **Gear key → quick settings:** a panel like Google TV's (time, volume, All settings,
   Screensaver, Inputs, Picture, Sound, Wi-Fi, Accessibility, Bluetooth) that opens over
   whatever is playing, HDMI included. TCL's remote sends `KEYCODE_NOTIFICATION` for the gear,
-  which `GearService` (an accessibility service that filters only that key) catches. For
+  which `GearService` (an accessibility service that filters key events) catches. For
   remotes that send `KEYCODE_SETTINGS`, the firmware opens the Settings app before any app
   sees the key, so the service closes Settings and opens the panel (Settings flashes).
+- **TV remote vs. HDMI 1:** on an HDMI input, the TV app forwards arrows, OK, Back, Menu,
+  numbers and media keys to the source over HDMI-CEC. `GearService` drops those while
+  HDMI 1's picture has focus, so only the source's own remote drives it (here an Apple TV);
+  CEC stays on, so the source can still turn the TV on and off. TV menus opened over the
+  picture, and Home, volume, power and input keys, work as usual.
 - **Wi-Fi name:** Android reveals it only to apps with location permission (`install.sh`
   grants it) and only while Location is on.
 

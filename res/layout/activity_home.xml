@@ -52,10 +52,18 @@
             </LinearLayout>
         </LinearLayout>
 
-        <TextView android:id="@+id/weather" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_gravity="top|end" android:layout_marginEnd="50dp" android:layout_marginTop="80dp"
-            android:textColor="#FFDCDCE0" android:textSize="16sp" android:singleLine="true"
-            android:shadowColor="#99000000" android:shadowRadius="6" android:padding="4dp" />
+        <!-- Weather, then the next few calendar events (HomeActivity fills the agenda, hidden
+             without a feed), sharing one left edge at the right of the screen. -->
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="top|end" android:layout_marginEnd="54dp" android:layout_marginTop="84dp"
+            android:orientation="vertical">
+            <TextView android:id="@+id/weather" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="#FFDCDCE0" android:textSize="16sp" android:singleLine="true"
+                android:shadowColor="#99000000" android:shadowRadius="6" />
+            <LinearLayout android:id="@+id/agenda" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="vertical"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <!-- The focused dock app's name over a soft glow; HomeActivity sizes the glow to the name. -->
         <com.ambient.launcher.GlowView android:id="@+id/glow" android:layout_width="0dp" android:layout_height="0dp" />
