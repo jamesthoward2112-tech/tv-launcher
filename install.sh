@@ -23,6 +23,8 @@ fi
 adb install -r launcher.apk
 # The Wi-Fi pill can only read the network name with location access.
 adb shell pm grant "$PKG" android.permission.ACCESS_FINE_LOCATION
+# On wake, the CEC log tells which device woke the TV, so home can switch to its input.
+adb shell pm grant "$PKG" android.permission.READ_LOGS
 # TCL's TclAppBoot otherwise keeps apps it does not know from starting on their own.
 adb shell appops set "$PKG" APP_AUTO_START allow
 # The gear key: GearService swaps the Settings app it opens for the quick settings panel.

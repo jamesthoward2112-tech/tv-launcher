@@ -61,6 +61,11 @@ repository. No Gradle.
   HDMI 1's picture has focus, so only the source's own remote drives it (here an Apple TV);
   CEC stays on, so the source can still turn the TV on and off. TV menus opened over the
   picture, and Home, volume, power and input keys, work as usual.
+- **Waking to an input:** TCL's system brings home to the front on every wake, and with home
+  in front the TV ignores the waking device's CEC `<Active Source>`. `WakeRouter` reads the
+  system log (`install.sh` grants `READ_LOGS`): after a CEC wake it opens the port of the
+  device that announces itself (waiting up to 8 s); otherwise it opens the last input. A key
+  pressed on home first cancels it. The same runs once after a cold boot.
 - **Wi-Fi name:** Android reveals it only to apps with location permission (`install.sh`
   grants it) and only while Location is on.
 

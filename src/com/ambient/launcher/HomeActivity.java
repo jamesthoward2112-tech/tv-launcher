@@ -13,6 +13,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.widget.ImageView;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -108,6 +109,8 @@ public class HomeActivity extends Activity {
     private View dim, credit, band;
     private double lat = Double.NaN, lon = Double.NaN;
     private ConnectivityManager connectivity;
+    /** Picking the input to wake to; null once it opened or the viewer took over. */
+    private WakeRouter wakeRouter;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -174,6 +177,22 @@ public class HomeActivity extends Activity {
         registerReceiver(packageReceiver, pkgs);
         connectivity = getSystemService(ConnectivityManager.class);
         loadApps();
+        // Started by the wake, or first thing after a cold boot.
+        if (WakeRouter.isWake(getIntent()) || SystemClock.elapsedRealtime() < 3 * 60_000) routeWake();
+    }
+
+    /** Leaves home for the input the TV should wake to, unless a key is pressed first. */
+    private void routeWake() {
+        if (wakeRouter != null) wakeRouter.cancel();
+        wakeRouter = WakeRouter.start(this, in -> {
+            wakeRouter = null;
+            startSafely(in.intent);
+        });
+    }
+
+    private void stopWakeRoute() {
+        if (wakeRouter != null) wakeRouter.cancel();
+        wakeRouter = null;
     }
 
     private Typeface font(int weight) {
@@ -297,6 +316,7 @@ public class HomeActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
+        stopWakeRoute();
         int k = e.getKeyCode();
         boolean center = k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER
                 || k == KeyEvent.KEYCODE_NUMPAD_ENTER;
@@ -488,6 +508,7 @@ public class HomeActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (WakeRouter.isWake(intent)) { routeWake(); return; }
         // Home pressed while already home: back to the dock. Coming back from an app keeps
         // the last focused tile.
         if (resumed) {
@@ -912,6 +933,7 @@ public class HomeActivity extends Activity {
 
     @Override
     protected void onStop() {
+        stopWakeRoute();
         connectivity.unregisterNetworkCallback(network);
         started = false;
         backdrop.stop();
