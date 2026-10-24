@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.widget.ImageView;
 import android.widget.TextView;
 import java.io.File;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -17,9 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * The photo background: Unsplash by theme (or Bing's photo of the day without a key),
- * cross-faded between two layers. It only works while home is on screen: start() and
- * stop() follow the activity, so nothing downloads while an app is in front.
+ * HowardTV's approved local cinema wallpaper. Never replaces it with online photos.
  */
 final class Backdrop {
     private static final long LIST_TTL = 6 * 3600_000L;
@@ -47,6 +46,14 @@ final class Backdrop {
         // Behind the content frame (z 0), the incoming layer above the outgoing one.
         a.setTranslationZ(-2);
         b.setTranslationZ(-1);
+        try (InputStream wallpaper = act.getAssets().open("cinema_wallpaper.jpg")) {
+            a.setImageBitmap(BitmapFactory.decodeStream(wallpaper));
+            a.setAlpha(1f);
+            shown = true;
+        } catch (Exception e) {
+            android.util.Log.e("HowardTV", "Cinema wallpaper unavailable", e);
+        }
+        credit.setText("");
     }
 
     void setKey(String unsplashKey) {
@@ -66,17 +73,10 @@ final class Backdrop {
     /** Re-reads the settings; next is true when the photo should change now (a new theme). */
     void apply(boolean next) {
         ui.removeCallbacks(tick);
-        if (!settings.photos()) {
-            for (ImageView v : layers) v.animate().alpha(0f).setDuration(600).start();
-            credit.setText("");
-            shown = false;
-            return;
-        }
-        if (!shown) showLast();
-        long interval = Long.parseLong(settings.get(LauncherSettings.PHOTO_MINUTES)) * 60_000L;
-        long due = prefs.getLong("at", 0) + interval - System.currentTimeMillis();
-        if (next || due <= 0) ui.post(tick);
-        else ui.postDelayed(tick, due);
+        // Settings may toggle the cinema art off, but it must never download replacements.
+        layers[0].animate().alpha(settings.photos() ? 1f : 0f).setDuration(180).start();
+        layers[1].setAlpha(0f);
+        credit.setText("");
     }
 
     private final Runnable tick = new Runnable() {

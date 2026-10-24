@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +8,9 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -66,6 +69,39 @@ final class App {
     }
 
     static final String INPUT = "input:";
+    static final String ALL_APPS = "howardtv:all-applications";
+    static final String MISSING = "missing:";
+
+    static App placeholder(Context ctx, String id, String label, int tint) {
+        return branded(ctx, MISSING + id, label, tint);
+    }
+
+    static App allApplications(Context ctx) {
+        return branded(ctx, ALL_APPS, "All Applications", 0xFF80FF20);
+    }
+
+    /** Brand-only tiles show before a streaming app has been installed on the Shield. */
+    private static App branded(Context ctx, String id, String label, int tint) {
+        final int w = 380, h = 220;
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bmp);
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(0xE6151B23);
+        canvas.drawRoundRect(new RectF(0, 0, w, h), 25, 25, p);
+        p.setColor(tint);
+        p.setStyle(Paint.Style.STROKE);
+        p.setStrokeWidth(6);
+        canvas.drawRoundRect(new RectF(5, 5, w - 5, h - 5), 20, 20, p);
+        p.setStyle(Paint.Style.FILL);
+        p.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.BOLD));
+        p.setTextSize(label.length() > 12 ? 40 : label.length() > 8 ? 48 : 62);
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setColor(0xFFF6F7FA);
+        String display = id.equals(ALL_APPS) ? "ALL APPS" : label;
+        canvas.drawText(display, w / 2f, h / 2f - (p.ascent() + p.descent()) / 2f, p);
+        BitmapDrawable banner = new BitmapDrawable(ctx.getResources(), bmp);
+        return new App(id, label, banner, banner, tint, null);
+    }
 
     /** HDMI 1 to 3 and Live TV, those the TV has, as tiles, each with its own colour. */
     static List<App> loadInputs(Context ctx) {

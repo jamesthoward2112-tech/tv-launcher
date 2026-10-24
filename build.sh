@@ -62,7 +62,7 @@ CLASSPATH_JARS=$(IFS=:; echo "${CP[*]}")
 javac --release 11 -nowarn -Xlint:-options -classpath "$JAR:$CLASSPATH_JARS" -d "$OUT/classes" \
     $(find src "$OUT/gen" -name '*.java')
 # Keeps: what the manifest and layouts name (from aapt2), the libraries' own rules, ours.
-java -cp "$R8" com.android.tools.r8.R8 --release --min-api 31 --lib "$JAR" --output "$OUT/dex" \
+java -cp "$R8" com.android.tools.r8.R8 --release --min-api 28 --lib "$JAR" --output "$OUT/dex" \
     --pg-conf "$OUT/aapt-rules.txt" --pg-conf proguard-rules.pro "${RULES[@]}" \
     $(find "$OUT/classes" -name '*.class') "${CP[@]}"
 (cd "$OUT/dex" && zip -q ../unsigned.apk classes*.dex)
@@ -78,12 +78,12 @@ if [[ -z ${SIGNING_KEYSTORE:-} && -r $ENV_FILE ]]; then
 fi
 if [[ -n ${SIGNING_KEYSTORE:-} ]]; then
     export SIGNING_PASSWORD
-    "$BT/apksigner" sign --ks "$SIGNING_KEYSTORE" --ks-pass env:SIGNING_PASSWORD --out launcher.apk "$OUT/aligned.apk"
+    "$BT/apksigner" sign --ks "$SIGNING_KEYSTORE" --ks-pass env:SIGNING_PASSWORD --out HowardTV.apk "$OUT/aligned.apk"
 else
     KS=debug.keystore
     [[ -f $KS ]] || keytool -genkeypair -keystore $KS -storepass android -keypass android \
-        -alias debug -keyalg RSA -validity 10000 -dname "CN=TV Launcher Debug" >/dev/null
+        -alias debug -keyalg RSA -validity 10000 -dname "CN=HowardTV Test" >/dev/null
     echo "warning: no release key; signing with $KS" >&2
-    "$BT/apksigner" sign --ks $KS --ks-pass pass:android --out launcher.apk "$OUT/aligned.apk"
+    "$BT/apksigner" sign --ks $KS --ks-pass pass:android --out HowardTV.apk "$OUT/aligned.apk"
 fi
-echo "built $(pwd)/launcher.apk"
+echo "built $(pwd)/HowardTV.apk"

@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.content.res.AssetManager;
 import android.graphics.Typeface;

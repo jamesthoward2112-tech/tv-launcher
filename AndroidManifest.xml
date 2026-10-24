@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ambient.launcher" android:versionCode="1" android:versionName="0.1">
-    <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="31" />
+    package="uk.co.howardtv" android:versionCode="1" android:versionName="1.0-test1">
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- Android only reveals the Wi-Fi network name to apps with location access. -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!-- Granted over adb: waking to the input whose device woke the TV over HDMI-CEC. -->
-    <uses-permission android:name="android.permission.READ_LOGS" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <queries>
@@ -21,7 +17,8 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
     </queries>
-    <application android:label="@string/app_name" android:theme="@style/Home"
+    <application android:label="@string/app_name" android:icon="@drawable/howardtv_badge"
+        android:banner="@drawable/howardtv_banner" android:theme="@style/Home"
         android:hardwareAccelerated="true" android:largeHeap="false">
         <activity android:name=".HomeActivity" android:exported="true"
             android:launchMode="singleTask" android:stateNotNeeded="true"
@@ -33,17 +30,15 @@
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- Also appears as a normal app in Shield's launcher before choosing it as Home. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
         </activity>
         <!-- Its own task (empty affinity), so opening it over HDMI does not bring home forward. -->
         <activity android:name=".QuickSettingsActivity" android:exported="false" android:theme="@style/QuickSettings"
             android:taskAffinity="" android:launchMode="singleTask" android:excludeFromRecents="true"
             android:noHistory="true" android:label="@string/quick_settings" />
-        <service android:name=".GearService" android:exported="true" android:label="@string/gear_service"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data android:name="android.accessibilityservice" android:resource="@xml/gear_service" />
-        </service>
     </application>
 </manifest>

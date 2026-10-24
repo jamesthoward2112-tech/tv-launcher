@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.graphics.Outline;
 import android.view.LayoutInflater;
@@ -52,7 +52,7 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
 
     @Override
     public Holder onCreateViewHolder(ViewGroup parent, int type) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.tile, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(names ? R.layout.tile_grid : R.layout.tile, parent, false);
         Holder h = new Holder(v);
         h.banner.setOutlineProvider(ROUNDED);
         h.banner.setClipToOutline(true);

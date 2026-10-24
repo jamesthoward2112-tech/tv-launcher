@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
