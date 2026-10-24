@@ -13,6 +13,7 @@ class HowardTVContractTests(unittest.TestCase):
     def test_manifest_is_branded_and_safe_for_shield(self):
         manifest = ET.parse(ROOT / "AndroidManifest.xml").getroot()
         self.assertEqual("uk.co.howardtv", manifest.attrib["package"])
+        self.assertGreaterEqual(int(manifest.attrib[ANDROID + "versionCode"]), 2)
         sdk = manifest.find("uses-sdk")
         self.assertLessEqual(int(sdk.attrib[ANDROID + "minSdkVersion"]), 30)
         permissions = {
