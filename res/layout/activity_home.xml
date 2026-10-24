@@ -28,19 +28,19 @@
             <TextView android:id="@+id/greeting" android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:textColor="#FF9A9AA2" android:textSize="15sp" android:visibility="gone" />
             <TextView android:id="@+id/clock" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#FFFFFFFF" android:textSize="46sp" android:gravity="end"
+                android:textColor="#FFFFFFFF" android:textSize="36sp" android:gravity="end"
                 android:includeFontPadding="false" android:layout_marginTop="2dp" />
             <TextView android:id="@+id/date" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#FFC8C8CE" android:textSize="16sp" android:gravity="end"
+                android:textColor="#FFC8C8CE" android:textSize="13sp" android:gravity="end"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <ImageView android:id="@+id/howardtv_logo" android:layout_width="284dp" android:layout_height="90dp"
-            android:layout_gravity="top|start" android:layout_marginStart="38dp" android:layout_marginTop="23dp"
+        <ImageView android:id="@+id/howardtv_logo" android:layout_width="215dp" android:layout_height="68dp"
+            android:layout_gravity="top|start" android:layout_marginStart="38dp" android:layout_marginTop="21dp"
             android:scaleType="fitCenter" android:contentDescription="@string/app_name" />
 
         <LinearLayout android:id="@+id/pills" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_gravity="top|start" android:layout_marginStart="@dimen/side" android:layout_marginTop="124dp"
+            android:layout_gravity="top|start" android:layout_marginStart="@dimen/side" android:layout_marginTop="105dp"
             android:orientation="horizontal" android:clipChildren="false">
             <LinearLayout android:id="@+id/pill_inputs" style="@style/Pill">
                 <ImageView style="@style/PillIcon" android:src="@drawable/ic_input" />
@@ -60,10 +60,10 @@
         <!-- Weather, then the next few calendar events (HomeActivity fills the agenda, hidden
              without a feed), sharing one left edge at the right of the screen. -->
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_gravity="top|end" android:layout_marginEnd="48dp" android:layout_marginTop="143dp"
+            android:layout_gravity="top|end" android:layout_marginEnd="48dp" android:layout_marginTop="115dp"
             android:orientation="vertical">
             <TextView android:id="@+id/weather" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:textColor="#FFDCDCE0" android:textSize="15sp" android:gravity="end" android:singleLine="true"
+                android:textColor="#FFDCDCE0" android:textSize="12sp" android:gravity="end" android:singleLine="true"
                 android:shadowColor="#99000000" android:shadowRadius="6" />
             <LinearLayout android:id="@+id/agenda" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="vertical"
@@ -74,7 +74,7 @@
         <uk.co.howardtv.GlowView android:id="@+id/glow" android:layout_width="0dp" android:layout_height="0dp" />
         <TextView android:id="@+id/title" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/tiles_x" android:layout_marginTop="325dp"
-            android:textColor="#FFF4F4F6" android:textSize="32sp" android:singleLine="true"
+            android:textColor="#FFF4F4F6" android:textSize="27sp" android:singleLine="true"
             android:includeFontPadding="false" />
 
         <FrameLayout android:id="@+id/band" android:layout_width="@dimen/band_w" android:layout_height="@dimen/band_h"

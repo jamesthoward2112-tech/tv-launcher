@@ -3,6 +3,7 @@
 # aapt2 -> javac -> R8 (shrink and optimise) -> zipalign -> apksigner.
 set -euo pipefail
 cd "$(dirname "$0")"
+./prepare-fonts.sh
 SDK="${ANDROID_HOME:-$HOME/Android/Sdk}"
 BT="$SDK/build-tools/34.0.0"
 JAR="$SDK/platforms/android-34/android.jar"

@@ -13,5 +13,5 @@
     <dimen name="band_bottom">30dp</dimen>
     <dimen name="grid_pitch">155dp</dimen>
     <dimen name="grid_top">580dp</dimen>
-    <dimen name="pill_h">34dp</dimen>
+    <dimen name="pill_h">31dp</dimen>
 </resources>

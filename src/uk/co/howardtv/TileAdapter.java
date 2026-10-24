@@ -56,6 +56,7 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
         Holder h = new Holder(v);
         h.banner.setOutlineProvider(ROUNDED);
         h.banner.setClipToOutline(true);
+        h.name.setTypeface(Fonts.lemon(parent.getContext().getAssets()));
         if (names) v.getLayoutParams().height = parent.getResources().getDimensionPixelSize(R.dimen.grid_pitch);
         else h.name.setVisibility(View.GONE);
         return h;
@@ -65,7 +66,8 @@ final class TileAdapter extends RecyclerView.Adapter<TileAdapter.Holder> {
     public void onBindViewHolder(Holder h, int position) {
         App a = apps.get(position);
         if (a.banner != null) {
-            h.banner.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            // Fit the entire logo or TV banner. Never crop brand artwork.
+            h.banner.setScaleType(ImageView.ScaleType.FIT_CENTER);
             h.banner.setPadding(0, 0, 0, 0);
             h.banner.setImageDrawable(a.banner);
         } else {

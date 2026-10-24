@@ -51,6 +51,35 @@ class HowardTVContractTests(unittest.TestCase):
         clock = next(e for e in layout.iter() if e.attrib.get(ANDROID + "id") == "@+id/clock")
         self.assertEqual("end", clock.attrib.get(ANDROID + "gravity"))
 
+    def test_requested_fonts_are_used_in_the_right_places(self):
+        fonts = ROOT / "assets" / "fonts"
+        self.assertTrue((fonts / "BebasNeue-Regular.ttf").is_file())
+        self.assertTrue((fonts / "LEMONMILK-Regular.otf").is_file())
+        font_loader = (ROOT / "src" / "uk" / "co" / "howardtv" / "Fonts.java").read_text()
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        tiles = (ROOT / "src" / "uk" / "co" / "howardtv" / "TileAdapter.java").read_text()
+        self.assertIn("static Typeface bebas(", font_loader)
+        self.assertIn("static Typeface lemon(", font_loader)
+        self.assertIn("Fonts.bebas(getAssets())", home)
+        self.assertIn("Fonts.lemon(getAssets())", home)
+        self.assertIn("Fonts.lemon(", tiles)
+
+    def test_uniform_logo_only_dock_and_iptv_mapping(self):
+        app = (ROOT / "src" / "uk" / "co" / "howardtv" / "App.java").read_text()
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        tiles = (ROOT / "src" / "uk" / "co" / "howardtv" / "TileAdapter.java").read_text()
+        self.assertTrue((ROOT / "src" / "uk" / "co" / "howardtv" / "BrandTile.java").is_file())
+        self.assertIn("BrandTile.create(", app)
+        self.assertIn('"IPTV"', home)
+        self.assertIn("ImageView.ScaleType.FIT_CENTER", tiles)
+        self.assertNotIn("ImageView.ScaleType.CENTER_CROP", tiles)
+        self.assertIn("h.name.setVisibility(View.GONE)", tiles)
+
+    def test_home_launcher_can_be_selected_without_disabling_stock_home(self):
+        installer = (ROOT / "install.sh").read_text()
+        self.assertIn("cmd package set-home-activity", installer)
+        self.assertNotIn("pm disable-user", installer)
+
 
 if __name__ == "__main__":
     unittest.main()
