@@ -24,6 +24,9 @@ jobs:
       - name: Install SDK packages
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" >/dev/null
 
+      - name: Obtain personal-use Lemon Milk font from the author's distribution
+        run: ./prepare-fonts.sh
+
       - name: HowardTV source and asset checks
         run: python3 -m unittest discover -s tests -v
 

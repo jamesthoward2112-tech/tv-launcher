@@ -77,7 +77,14 @@ final class App {
     }
 
     static App allApplications(Context ctx) {
-        return branded(ctx, ALL_APPS, "All Applications", 0xFF80FF20);
+        return new App(ALL_APPS, "All Applications", BrandTile.create(ctx, "allapps"),
+                null, 0xFF80FF20, null);
+    }
+
+    /** Use one consistent logo-only card for favourites, retaining the installed launch intent. */
+    static App favourite(Context ctx, App source, String id, String label, int tint) {
+        return new App(source.pkg, label, BrandTile.create(ctx, id),
+                source.icon, tint, source.launch);
     }
 
     /** Brand-only tiles show before a streaming app has been installed on the Shield. */

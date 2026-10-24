@@ -4,9 +4,11 @@ import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.util.SparseArray;
 
-/** Outfit (SIL OFL, assets/fonts) is a variable font; one Typeface per weight in use. */
+/** Bundled typefaces. Bebas Neue is OFL; Lemon Milk is supplied for personal use. */
 final class Fonts {
     private static final SparseArray<Typeface> cache = new SparseArray<>();
+    private static Typeface bebas;
+    private static Typeface lemon;
 
     private Fonts() {}
 
@@ -18,5 +20,15 @@ final class Fonts {
             cache.put(weight, t);
         }
         return t;
+    }
+
+    static Typeface bebas(AssetManager assets) {
+        if (bebas == null) bebas = Typeface.createFromAsset(assets, "fonts/BebasNeue-Regular.ttf");
+        return bebas;
+    }
+
+    static Typeface lemon(AssetManager assets) {
+        if (lemon == null) lemon = Typeface.createFromAsset(assets, "fonts/LEMONMILK-Regular.otf");
+        return lemon;
     }
 }

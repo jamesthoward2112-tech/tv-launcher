@@ -5,3 +5,5 @@ libs/
 debug.keystore
 # Uncompressed source artwork remains in the local project/Library, not the APK.
 assets/cinema_wallpaper.png
+# The author permits personal use; do not redistribute the raw Lemon Milk font.
+assets/fonts/LEMONMILK-Regular.otf

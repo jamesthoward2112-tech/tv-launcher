@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="uk.co.howardtv" android:versionCode="1" android:versionName="1.0-test1">
+    package="uk.co.howardtv" android:versionCode="3" android:versionName="1.2-test3">
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="31" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -34,6 +34,11 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+            <!-- Also appears in a phone's app drawer for handheld design previews. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <!-- Its own task (empty affinity), so opening it over HDMI does not bring home forward. -->

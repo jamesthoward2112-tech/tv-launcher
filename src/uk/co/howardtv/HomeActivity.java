@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.app.UiModeManager;
+import android.content.res.Configuration;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -119,6 +121,7 @@ public class HomeActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_home);
+        configurePhonePreview();
         prefs = getSharedPreferences("home", MODE_PRIVATE);
         gridTop = getResources().getDimensionPixelSize(R.dimen.grid_top);
         pitch = getResources().getDimensionPixelSize(R.dimen.grid_pitch);
@@ -143,7 +146,7 @@ public class HomeActivity extends Activity {
         }
         hint = findViewById(R.id.hint);
         hint.setTypeface(font(400));
-        weather.setTypeface(font(300));
+        weather.setTypeface(Fonts.bebas(getAssets()));
         ((TextView) credit).setTypeface(font(300));
 
         // The Unsplash key and location come from config.json, pushed to the TV over adb.
@@ -160,11 +163,11 @@ public class HomeActivity extends Activity {
         styleBand();
         pills = new View[] {findViewById(R.id.pill_inputs), findViewById(R.id.pill_wifi), findViewById(R.id.pill_settings)};
 
-        greeting.setTypeface(font(300));
-        clock.setTypeface(font(120));
-        date.setTypeface(font(300));
-        title.setTypeface(font(300));
-        for (View p : pills) ((TextView) ((ViewGroup) p).getChildAt(1)).setTypeface(font(400));
+        greeting.setTypeface(Fonts.bebas(getAssets()));
+        clock.setTypeface(Fonts.bebas(getAssets()));
+        date.setTypeface(Fonts.bebas(getAssets()));
+        title.setTypeface(Fonts.lemon(getAssets()));
+        for (View p : pills) ((TextView) ((ViewGroup) p).getChildAt(1)).setTypeface(Fonts.bebas(getAssets()));
 
         dockAdapter = new TileAdapter(false, (h, pos) -> bindFocus(h, area == Area.DOCK && pos == dockIdx));
         gridAdapter = new TileAdapter(true, (h, pos) -> bindFocus(h, area == Area.GRID && pos == gridIdx));
@@ -206,6 +209,31 @@ public class HomeActivity extends Activity {
         return Fonts.outfit(getAssets(), weight);
     }
 
+    /** Fit the unchanged 960x540 TV home onto a shorter phone display in landscape. */
+    private void configurePhonePreview() {
+        UiModeManager mode = (UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
+        if (mode != null && mode.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) return;
+
+        View root = findViewById(R.id.root);
+        View canvas = findViewById(R.id.preview_canvas);
+        final int virtualWidth = dp(960), virtualHeight = dp(540);
+        ViewGroup.LayoutParams params = canvas.getLayoutParams();
+        params.width = virtualWidth;
+        params.height = virtualHeight;
+        canvas.setLayoutParams(params);
+        canvas.setPivotX(0f);
+        canvas.setPivotY(0f);
+        root.post(() -> {
+            if (root.getWidth() <= 0 || root.getHeight() <= 0) return;
+            float scale = Math.min(root.getWidth() / (float) virtualWidth,
+                    root.getHeight() / (float) virtualHeight) * 0.97f;
+            canvas.setScaleX(scale);
+            canvas.setScaleY(scale);
+            canvas.setTranslationX((root.getWidth() - virtualWidth * scale) / 2f);
+            canvas.setTranslationY((root.getHeight() - virtualHeight * scale) / 2f);
+        });
+    }
+
     private void setUpList(RecyclerView rv, TileAdapter adapter, RecyclerView.LayoutManager lm) {
         rv.setLayoutManager(lm);
         rv.setAdapter(adapter);
@@ -242,14 +270,15 @@ public class HomeActivity extends Activity {
 
     private void showApps(List<App> all) {
         // Seven favourite launchers, plus a fixed All Applications shortcut at the end.
-        // Installed apps contribute their real banners; missing apps remain editable tiles.
+        // Favourites use matching monochrome cards, while the other installed apps
+        // keep their own artwork in All Applications.
         String saved = prefs.getString("order", null);
         List<App> rest = new ArrayList<>(all);
         List<App> defaults = new ArrayList<>();
         defaults.add(takeDefault(rest, "netflix", "Netflix", 0xFFE50914, "netflix"));
         defaults.add(takeDefault(rest, "disney", "Disney+", 0xFF2566FF, "disney"));
         defaults.add(takeDefault(rest, "prime", "Prime Video", 0xFF00A8E1, "prime", "amazonvideo", "avod"));
-        defaults.add(takeDefault(rest, "purpleglobe", "PurpleGlobe IPTV", 0xFFA25AFF, "purpleglobe", "purple globe"));
+        defaults.add(takeDefault(rest, "purpleglobe", "IPTV", 0xFFA25AFF, "purpleglobe", "purple globe"));
         defaults.add(takeDefault(rest, "kodi", "Kodi", 0xFF17B6E8, "kodi", "xbmc"));
         defaults.add(takeDefault(rest, "youtube", "YouTube", 0xFFFF2424, "youtube"));
         defaults.add(takeDefault(rest, "spotify", "Spotify", 0xFF1ED760, "spotify"));
@@ -285,10 +314,11 @@ public class HomeActivity extends Activity {
             App app = rest.get(i);
             String p = app.pkg.toLowerCase(Locale.ROOT), l = app.label.toLowerCase(Locale.ROOT);
             for (String alias : aliases) {
-                if (p.contains(alias) || l.contains(alias)) return rest.remove(i);
+                if (p.contains(alias) || l.contains(alias))
+                    return App.favourite(this, rest.remove(i), id, label, tint);
             }
         }
-        return App.placeholder(this, id, label, tint);
+        return App.favourite(this, App.placeholder(this, id, label, tint), id, label, tint);
     }
 
     /** Fills the dock and grid from order; returns the dock list. */

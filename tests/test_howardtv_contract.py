@@ -13,6 +13,7 @@ class HowardTVContractTests(unittest.TestCase):
     def test_manifest_is_branded_and_safe_for_shield(self):
         manifest = ET.parse(ROOT / "AndroidManifest.xml").getroot()
         self.assertEqual("uk.co.howardtv", manifest.attrib["package"])
+        self.assertGreaterEqual(int(manifest.attrib[ANDROID + "versionCode"]), 2)
         sdk = manifest.find("uses-sdk")
         self.assertLessEqual(int(sdk.attrib[ANDROID + "minSdkVersion"]), 30)
         permissions = {
@@ -50,6 +51,61 @@ class HowardTVContractTests(unittest.TestCase):
         self.assertIsNotNone(image)
         clock = next(e for e in layout.iter() if e.attrib.get(ANDROID + "id") == "@+id/clock")
         self.assertEqual("end", clock.attrib.get(ANDROID + "gravity"))
+
+    def test_phone_preview_fits_tv_canvas_without_changing_shield_layout(self):
+        layout = ET.parse(ROOT / "res" / "layout" / "activity_home.xml").getroot()
+        preview = next(e for e in layout.iter() if e.attrib.get(ANDROID + "id") == "@+id/preview_canvas")
+        self.assertTrue(any(e.attrib.get(ANDROID + "id") == "@+id/content" for e in preview.iter()))
+        logo = next(e for e in preview.iter() if e.attrib.get(ANDROID + "id") == "@+id/howardtv_logo")
+        self.assertLessEqual(int(logo.attrib[ANDROID + "layout_width"].removesuffix("dp")), 145)
+        self.assertLessEqual(int(logo.attrib[ANDROID + "layout_height"].removesuffix("dp")), 48)
+
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        self.assertIn("configurePhonePreview()", home)
+        self.assertIn("Configuration.UI_MODE_TYPE_TELEVISION", home)
+        self.assertIn("setScaleX(scale)", home)
+        self.assertIn("setScaleY(scale)", home)
+        self.assertIn("Math.min(", home)
+
+    def test_phone_can_open_launcher_from_app_drawer(self):
+        manifest = ET.parse(ROOT / "AndroidManifest.xml").getroot()
+        home = next(a for a in manifest.find("application").findall("activity") if a.attrib[ANDROID + "name"] == ".HomeActivity")
+        filters = [
+            {e.attrib[ANDROID + "name"] for e in f.findall("category")}
+            for f in home.findall("intent-filter")
+        ]
+        self.assertTrue(any("android.intent.category.LAUNCHER" in categories for categories in filters))
+        self.assertTrue(any("android.intent.category.HOME" in categories for categories in filters))
+        self.assertGreaterEqual(int(manifest.attrib[ANDROID + "versionCode"]), 3)
+
+    def test_requested_fonts_are_used_in_the_right_places(self):
+        fonts = ROOT / "assets" / "fonts"
+        self.assertTrue((fonts / "BebasNeue-Regular.ttf").is_file())
+        self.assertTrue((fonts / "LEMONMILK-Regular.otf").is_file())
+        font_loader = (ROOT / "src" / "uk" / "co" / "howardtv" / "Fonts.java").read_text()
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        tiles = (ROOT / "src" / "uk" / "co" / "howardtv" / "TileAdapter.java").read_text()
+        self.assertIn("static Typeface bebas(", font_loader)
+        self.assertIn("static Typeface lemon(", font_loader)
+        self.assertIn("Fonts.bebas(getAssets())", home)
+        self.assertIn("Fonts.lemon(getAssets())", home)
+        self.assertIn("Fonts.lemon(", tiles)
+
+    def test_uniform_logo_only_dock_and_iptv_mapping(self):
+        app = (ROOT / "src" / "uk" / "co" / "howardtv" / "App.java").read_text()
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        tiles = (ROOT / "src" / "uk" / "co" / "howardtv" / "TileAdapter.java").read_text()
+        self.assertTrue((ROOT / "src" / "uk" / "co" / "howardtv" / "BrandTile.java").is_file())
+        self.assertIn("BrandTile.create(", app)
+        self.assertIn('"IPTV"', home)
+        self.assertIn("ImageView.ScaleType.FIT_CENTER", tiles)
+        self.assertNotIn("ImageView.ScaleType.CENTER_CROP", tiles)
+        self.assertIn("h.name.setVisibility(View.GONE)", tiles)
+
+    def test_home_launcher_can_be_selected_without_disabling_stock_home(self):
+        installer = (ROOT / "install.sh").read_text()
+        self.assertIn("cmd package set-home-activity", installer)
+        self.assertNotIn("pm disable-user", installer)
 
 
 if __name__ == "__main__":
