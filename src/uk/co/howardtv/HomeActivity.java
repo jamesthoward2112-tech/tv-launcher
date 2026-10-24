@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.app.UiModeManager;
+import android.content.res.Configuration;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -119,6 +121,7 @@ public class HomeActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_home);
+        configurePhonePreview();
         prefs = getSharedPreferences("home", MODE_PRIVATE);
         gridTop = getResources().getDimensionPixelSize(R.dimen.grid_top);
         pitch = getResources().getDimensionPixelSize(R.dimen.grid_pitch);
@@ -204,6 +207,31 @@ public class HomeActivity extends Activity {
 
     private Typeface font(int weight) {
         return Fonts.outfit(getAssets(), weight);
+    }
+
+    /** Fit the unchanged 960x540 TV home onto a shorter phone display in landscape. */
+    private void configurePhonePreview() {
+        UiModeManager mode = (UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
+        if (mode != null && mode.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) return;
+
+        View root = findViewById(R.id.root);
+        View canvas = findViewById(R.id.preview_canvas);
+        final int virtualWidth = dp(960), virtualHeight = dp(540);
+        ViewGroup.LayoutParams params = canvas.getLayoutParams();
+        params.width = virtualWidth;
+        params.height = virtualHeight;
+        canvas.setLayoutParams(params);
+        canvas.setPivotX(0f);
+        canvas.setPivotY(0f);
+        root.post(() -> {
+            if (root.getWidth() <= 0 || root.getHeight() <= 0) return;
+            float scale = Math.min(root.getWidth() / (float) virtualWidth,
+                    root.getHeight() / (float) virtualHeight) * 0.97f;
+            canvas.setScaleX(scale);
+            canvas.setScaleY(scale);
+            canvas.setTranslationX((root.getWidth() - virtualWidth * scale) / 2f);
+            canvas.setTranslationY((root.getHeight() - virtualHeight * scale) / 2f);
+        });
     }
 
     private void setUpList(RecyclerView rv, TileAdapter adapter, RecyclerView.LayoutManager lm) {

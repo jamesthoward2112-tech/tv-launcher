@@ -52,6 +52,32 @@ class HowardTVContractTests(unittest.TestCase):
         clock = next(e for e in layout.iter() if e.attrib.get(ANDROID + "id") == "@+id/clock")
         self.assertEqual("end", clock.attrib.get(ANDROID + "gravity"))
 
+    def test_phone_preview_fits_tv_canvas_without_changing_shield_layout(self):
+        layout = ET.parse(ROOT / "res" / "layout" / "activity_home.xml").getroot()
+        preview = next(e for e in layout.iter() if e.attrib.get(ANDROID + "id") == "@+id/preview_canvas")
+        self.assertTrue(any(e.attrib.get(ANDROID + "id") == "@+id/content" for e in preview.iter()))
+        logo = next(e for e in preview.iter() if e.attrib.get(ANDROID + "id") == "@+id/howardtv_logo")
+        self.assertLessEqual(int(logo.attrib[ANDROID + "layout_width"].removesuffix("dp")), 145)
+        self.assertLessEqual(int(logo.attrib[ANDROID + "layout_height"].removesuffix("dp")), 48)
+
+        home = (ROOT / "src" / "uk" / "co" / "howardtv" / "HomeActivity.java").read_text()
+        self.assertIn("configurePhonePreview()", home)
+        self.assertIn("Configuration.UI_MODE_TYPE_TELEVISION", home)
+        self.assertIn("setScaleX(scale)", home)
+        self.assertIn("setScaleY(scale)", home)
+        self.assertIn("Math.min(", home)
+
+    def test_phone_can_open_launcher_from_app_drawer(self):
+        manifest = ET.parse(ROOT / "AndroidManifest.xml").getroot()
+        home = next(a for a in manifest.find("application").findall("activity") if a.attrib[ANDROID + "name"] == ".HomeActivity")
+        filters = [
+            {e.attrib[ANDROID + "name"] for e in f.findall("category")}
+            for f in home.findall("intent-filter")
+        ]
+        self.assertTrue(any("android.intent.category.LAUNCHER" in categories for categories in filters))
+        self.assertTrue(any("android.intent.category.HOME" in categories for categories in filters))
+        self.assertGreaterEqual(int(manifest.attrib[ANDROID + "versionCode"]), 3)
+
     def test_requested_fonts_are_used_in_the_right_places(self):
         fonts = ROOT / "assets" / "fonts"
         self.assertTrue((fonts / "BebasNeue-Regular.ttf").is_file())

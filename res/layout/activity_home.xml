@@ -19,6 +19,9 @@
         android:layout_gravity="bottom|end" android:layout_marginEnd="@dimen/side" android:layout_marginBottom="9dp"
         android:textColor="#80FFFFFF" android:textSize="10sp" android:singleLine="true" />
 
+    <!-- The virtual 960x540 TV canvas scales only on phones. TV dimensions stay unchanged. -->
+    <FrameLayout android:id="@+id/preview_canvas" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:clipChildren="false" android:clipToPadding="false">
     <FrameLayout android:id="@+id/content" android:layout_width="match_parent" android:layout_height="1200dp"
         android:clipChildren="false" android:clipToPadding="false">
 
@@ -35,7 +38,7 @@
                 android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <ImageView android:id="@+id/howardtv_logo" android:layout_width="215dp" android:layout_height="68dp"
+        <ImageView android:id="@+id/howardtv_logo" android:layout_width="134dp" android:layout_height="42dp"
             android:layout_gravity="top|start" android:layout_marginStart="38dp" android:layout_marginTop="21dp"
             android:scaleType="fitCenter" android:contentDescription="@string/app_name" />
 
@@ -97,6 +100,7 @@
 
         <uk.co.howardtv.GlassHighlight android:id="@+id/glass"
             android:layout_width="match_parent" android:layout_height="match_parent" />
+    </FrameLayout>
     </FrameLayout>
 
     <!-- Shown while rearranging. -->
