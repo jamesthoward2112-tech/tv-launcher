@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -41,7 +41,7 @@ final class LauncherSettings {
     };
 
     static final Option BACKGROUND = new Option("background", "Background", "photo",
-            new String[] {"photo", "black"}, new String[] {"Photos", "Black"});
+            new String[] {"photo", "black"}, new String[] {"Cinema wallpaper", "Black"});
     static final Option THEME;
     static final Option PHOTO_MINUTES = new Option("photoMinutes", "Change photo every", "15",
             new String[] {"5", "15", "60", "1440"}, new String[] {"5 minutes", "15 minutes", "1 hour", "Day"});
@@ -85,7 +85,7 @@ final class LauncherSettings {
     List<Option> visible() {
         List<Option> l = new ArrayList<>();
         l.add(BACKGROUND);
-        if (photos()) { l.add(THEME); l.add(PHOTO_MINUTES); }
+        // The cinema wallpaper is fixed by HowardTV's design; no rotating photo themes.
         l.add(WEATHER);
         if (get(WEATHER).equals("on")) l.add(UNITS);
         return l;

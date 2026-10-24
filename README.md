@@ -1,75 +1,50 @@
-# tv-launcher
+# HowardTV
 
-[![Build](https://github.com/zhengnanli/tv-launcher/actions/workflows/build.yml/badge.svg)](https://github.com/zhengnanli/tv-launcher/actions/workflows/build.yml)
+HowardTV is James Howard's ad-free, cinema-themed Android TV launcher for the Nvidia Shield.
+It is a personal customisation of [zhengnanli/tv-launcher](https://github.com/zhengnanli/tv-launcher),
+retaining the upstream MIT licence and its Android TV remote-navigation foundation.
 
-A small, quiet home screen for Android TV / Google TV: a dock of four tiles in a rounded
-band, the rest in a 4-column grid below it, one glass highlight that springs between tiles,
-frosted pills for Inputs, Wi-Fi and Settings, and a quick settings panel on the remote's
-gear key.
+## Appearance and controls
 
-![Home screen: clock, weather, pills and the dock over a photo](docs/screenshot.jpg)
+- The approved **Luxury Home Cinema Under Starlit Mountains** artwork is shipped in the APK.
+  It is never replaced by internet photos.
+- Nvidia-green HowardTV logo at the upper left, clock/date and Gillingham weather at upper right.
+- Eight dock tiles: **Netflix, Disney+, Prime Video, PurpleGlobe IPTV, Kodi, YouTube,
+  Spotify, All Applications**.
+- Installed app banners/icons are read from the Shield. Missing defaults are visibly named
+  placeholders. The last All Applications tile enters a scrollable app grid.
+- D-pad moves focus; **OK** launches an app; **hold OK**, then use arrows and OK to
+  rearrange shortcuts and swap an installed app from the grid into the dock.
+- **Back** returns from the app grid or menu to the dock.
+- Up from the dock reaches the utility pills and Settings. Weather and temperature units
+  can be toggled there. Weather works without device location permission; the default
+  forecast uses Gillingham, Kent (coordinates can be overridden by `config.json`).
 
-![Quick settings panel over the home screen](docs/quick-settings.jpg)
+## Safe Nvidia Shield test installation
 
-Built for a TCL Google TV (Android 12, 1 GB class RAM): no blur, no video, and photos and
-weather refresh only while the home screen is visible.
+1. Download the direct `HowardTV.apk` from a tagged release or the APK from a build artifact.
+2. Install with `adb install -r HowardTV.apk`, or sideload it with a file manager.
+3. Open **HowardTV** from the Shield app list. Test the directional pad, all shortcuts and
+   All Applications before deciding whether to use it as your Home screen.
 
-```sh
-adb connect <tv-ip>:5555
-./install.sh            # build, install, set as home, disable the stock launcher
-./install.sh --restore  # give HOME back to the stock launcher
-```
+**The install script and APK do not disable or replace the stock Nvidia launcher.** No root,
+system permissions, or accessibility service setup is required. To roll back, simply use
+the stock Home screen and uninstall HowardTV in Settings → Apps, or run
+`adb uninstall uk.co.howardtv`.
 
-Every push to `main` is built by GitHub Actions (the APK is under the run's **Artifacts**);
-a `v*` tag also publishes it as a release download. Builds are release builds, shrunk and
-optimised by R8, and signed with `SIGNING_KEYSTORE` / `SIGNING_PASSWORD` (CI: repository
-secrets; locally: the environment or `~/.config/tv-ambient/signing.env`), so local and CI
-builds install over each other. Without a key, `build.sh` falls back to a debug key.
+## Build
 
-`build.sh` needs a JDK and the Android SDK (`platforms;android-34`, `build-tools;34.0.0`);
-it fetches RecyclerView and its AndroidX dependencies (and R8) from Google's Maven
-repository. No Gradle.
+Run `./build.sh` with a JDK and Android SDK platform/build tools 34.0.0. The script produces
+`HowardTV.apk` (test-key-signed unless a signing keystore is configured). The GitHub Actions
+workflow runs contract checks and builds the same APK on pushes to the project branch.
+The test APK is not yet a claim of successful testing on physical Shield hardware.
 
-- **Dock:** HDMI 1–3 and Live TV, as tiles with their own icons that switch straight to the
-  input; the TV app's own tile is left out in favour of Live TV. Apps can be moved in like any tile.
-- **Keys:** Up/Down move one row; Up from the dock reaches the top bar; the ends of the top
-  bar and of each row stop. The last focused tile is remembered.
-- **Inputs:** HDMI ports, AV (when the TV registers one) and Live TV, from the TV input
-  framework.
-- **Settings pill:** a dropdown for Background (Photos or Black), Photo theme (the ambient
-  screensaver's themes), how often the photo changes, Weather on/off and °C/°F, plus a row
-  for the TV's own settings. Left/Right change a value.
-- **Photos and weather:** Unsplash by theme (Bing's photo of the day without a key) and an
-  Open-Meteo line under the pills. Both refresh only while home is on screen. The
-  Unsplash key and `lat`/`lon` come from `config.json` in the app's files dir on the TV
-  (`/sdcard/Android/data/com.ambient.launcher/files/`), pushed over adb.
-- **Calendar:** on the right under the weather (sharing its left edge), today's events still to come (or the next day within a
-  week that has any), up to three, from the published ICS feeds in `config.json`'s
-  `icsUrls`. Recurring events and Outlook's time zone names are handled as in the ambient
-  screensaver; feeds refresh every 15 minutes while home is on screen.
-- **Rearranging:** hold OK (or press Menu) on an app, move it with the arrows, OK to drop.
-  Within the dock or grid it slides; across them it swaps, so the dock stays full.
-- **Back:** from the grid or top bar returns to the dock; on the dock starts the screensaver.
-- **Gear key → quick settings:** a panel like Google TV's (time, volume, All settings,
-  Screensaver, Inputs, Picture, Sound, Wi-Fi, Accessibility, Bluetooth) that opens over
-  whatever is playing, HDMI included. TCL's remote sends `KEYCODE_NOTIFICATION` for the gear,
-  which `GearService` (an accessibility service that filters key events) catches. For
-  remotes that send `KEYCODE_SETTINGS`, the firmware opens the Settings app before any app
-  sees the key, so the service closes Settings and opens the panel (Settings flashes).
-- **TV remote vs. HDMI 1:** on an HDMI input, the TV app forwards arrows, OK, Back, Menu,
-  numbers and media keys to the source over HDMI-CEC. `GearService` drops those while
-  HDMI 1's picture has focus, so only the source's own remote drives it (here an Apple TV);
-  CEC stays on, so the source can still turn the TV on and off. TV menus opened over the
-  picture, and Home, volume, power and input keys, work as usual.
-- **Waking to an input:** TCL's system brings home to the front on every wake, and with home
-  in front the TV ignores the waking device's CEC `<Active Source>`. `WakeRouter` reads the
-  system log (`install.sh` grants `READ_LOGS`): after a CEC wake it opens the port of the
-  device that announces itself (waiting up to 8 s); otherwise it opens the last input. A key
-  pressed on home first cancels it. The same runs once after a cold boot.
-- **Wi-Fi name:** Android reveals it only to apps with location permission (`install.sh`
-  grants it) and only while Location is on.
+## Source and licensing
 
-Typeface: [Outfit](https://github.com/Outfitio/Outfit-Fonts), SIL Open Font License
-(`assets/fonts/OFL.txt`). Pill icons: Material Icons, Apache License 2.0.
+The original TV launcher code and the Outfit font were supplied by the upstream project:
+- [Original tv-launcher](https://github.com/zhengnanli/tv-launcher), MIT licence.
+- Outfit font: SIL Open Font License (`assets/fonts/OFL.txt`).
 
-MIT License; see `LICENSE`.
+HowardTV logos and cinema wallpaper are personal artwork supplied by the project owner.
+Streaming service names and icons belong to their respective owners; icons from installed
+apps are provided by those apps at runtime.

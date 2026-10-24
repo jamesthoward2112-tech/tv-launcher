@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;

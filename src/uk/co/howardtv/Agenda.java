@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import java.time.Duration;
 import java.time.LocalDate;

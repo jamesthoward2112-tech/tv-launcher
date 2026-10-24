@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;

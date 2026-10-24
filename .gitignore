@@ -3,3 +3,5 @@ libs/
 *.apk
 *.idsig
 debug.keystore
+# Uncompressed source artwork remains in the local project/Library, not the APK.
+assets/cinema_wallpaper.png

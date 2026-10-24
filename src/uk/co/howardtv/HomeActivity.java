@@ -1,4 +1,4 @@
-package com.ambient.launcher;
+package uk.co.howardtv;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.RectF;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
@@ -40,6 +41,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -60,7 +62,7 @@ import java.util.concurrent.Executors;
 public class HomeActivity extends Activity {
     /** The TV app, left out of the grid when the Live TV tile stands in for it. */
     private static final String TV_APP = "com.tcl.tv";
-    private static final int COLUMNS = 4, DOCK_SIZE = 4;
+    private static final int COLUMNS = 4, DOCK_SIZE = 8;
     private static final float TILE_SCALE = 1.08f, PILL_SCALE = 1.06f;
 
     private enum Area { TOP, DOCK, GRID, MENU }
@@ -107,7 +109,8 @@ public class HomeActivity extends Activity {
     private final List<String> icsUrls = new ArrayList<>();
     private Agenda agenda;
     private View dim, credit, band;
-    private double lat = Double.NaN, lon = Double.NaN;
+    /** Gillingham, Kent; the optional on-device config can override this. */
+    private double lat = 51.3867, lon = 0.5471;
     private ConnectivityManager connectivity;
     /** Picking the input to wake to; null once it opened or the viewer took over. */
     private WakeRouter wakeRouter;
@@ -133,6 +136,11 @@ public class HomeActivity extends Activity {
         dim = findViewById(R.id.dim);
         credit = findViewById(R.id.credit);
         band = findViewById(R.id.band);
+        try (InputStream in = getAssets().open("HowardTV-logo.png")) {
+            ((ImageView) findViewById(R.id.howardtv_logo)).setImageBitmap(BitmapFactory.decodeStream(in));
+        } catch (Exception e) {
+            android.util.Log.e("HowardTV", "Logo unavailable", e);
+        }
         hint = findViewById(R.id.hint);
         hint.setTypeface(font(400));
         weather.setTypeface(font(300));
@@ -177,8 +185,7 @@ public class HomeActivity extends Activity {
         registerReceiver(packageReceiver, pkgs);
         connectivity = getSystemService(ConnectivityManager.class);
         loadApps();
-        // Started by the wake, or first thing after a cold boot.
-        if (WakeRouter.isWake(getIntent()) || SystemClock.elapsedRealtime() < 3 * 60_000) routeWake();
+        // Never auto-switch HDMI inputs or change the stock Shield launcher.
     }
 
     /** Leaves home for the input the TV should wake to, unless a key is pressed first. */
@@ -228,33 +235,37 @@ public class HomeActivity extends Activity {
 
     private void loadApps() {
         loader.execute(() -> {
-            List<App> inputs = App.loadInputs(this), all = new ArrayList<>(inputs);
-            boolean live = false;
-            for (App a : inputs) live |= a.label.equals("Live TV");
-            for (App a : App.loadAll(this)) if (!(live && a.pkg.equals(TV_APP))) all.add(a);
+            List<App> all = App.loadAll(this);
             runOnUiThread(() -> showApps(all));
         });
     }
 
     private void showApps(List<App> all) {
-        // Saved order first (minus uninstalled apps), then new ones by name. Before any
-        // rearranging, the inputs (first in all) fill the dock; an order saved before input
-        // tiles existed gets them in front too.
+        // Seven favourite launchers, plus a fixed All Applications shortcut at the end.
+        // Installed apps contribute their real banners; missing apps remain editable tiles.
         String saved = prefs.getString("order", null);
-        List<String> pkgs = new ArrayList<>();
-        if (saved != null) {
-            for (String s : saved.split(",")) if (!s.isEmpty()) pkgs.add(s);
-        }
-        if (saved == null || !saved.contains(App.INPUT)) {
-            for (int i = 0; i < all.size() && all.get(i).pkg.startsWith(App.INPUT); i++) pkgs.add(i, all.get(i).pkg);
-        }
         List<App> rest = new ArrayList<>(all);
-        order.clear();
-        for (String s : pkgs) {
-            int i = indexOf(rest, s);
-            if (i >= 0) order.add(rest.remove(i));
+        List<App> defaults = new ArrayList<>();
+        defaults.add(takeDefault(rest, "netflix", "Netflix", 0xFFE50914, "netflix"));
+        defaults.add(takeDefault(rest, "disney", "Disney+", 0xFF2566FF, "disney"));
+        defaults.add(takeDefault(rest, "prime", "Prime Video", 0xFF00A8E1, "prime", "amazonvideo", "avod"));
+        defaults.add(takeDefault(rest, "purpleglobe", "PurpleGlobe IPTV", 0xFFA25AFF, "purpleglobe", "purple globe"));
+        defaults.add(takeDefault(rest, "kodi", "Kodi", 0xFF17B6E8, "kodi", "xbmc"));
+        defaults.add(takeDefault(rest, "youtube", "YouTube", 0xFFFF2424, "youtube"));
+        defaults.add(takeDefault(rest, "spotify", "Spotify", 0xFF1ED760, "spotify"));
+        defaults.addAll(rest);
+        List<App> ordered = new ArrayList<>();
+        if (saved != null) for (String s : saved.split(",")) {
+            if (s.isEmpty() || s.equals(App.ALL_APPS)) continue;
+            int i = indexOf(defaults, s);
+            if (i >= 0) ordered.add(defaults.remove(i));
         }
-        order.addAll(rest);
+        ordered.addAll(defaults);
+        order.clear();
+        int favorites = Math.min(DOCK_SIZE - 1, ordered.size());
+        order.addAll(ordered.subList(0, favorites));
+        order.add(App.allApplications(this));
+        order.addAll(ordered.subList(favorites, ordered.size()));
         // Keep focus on the same app across reloads (an install, or the first load).
         String pkg = focusedPackage();
         if (pkg == null) pkg = prefs.getString("pkg", null);
@@ -267,6 +278,17 @@ public class HomeActivity extends Activity {
         if (area == Area.DOCK && indexOf(dock, pkg) < 0 && indexOf(grid, pkg) >= 0) area = Area.GRID;
         if (dock.isEmpty() && area == Area.DOCK) area = grid.isEmpty() ? Area.TOP : Area.GRID;
         afterLayout(() -> applyFocus(false));
+    }
+
+    private App takeDefault(List<App> rest, String id, String label, int tint, String... aliases) {
+        for (int i = 0; i < rest.size(); i++) {
+            App app = rest.get(i);
+            String p = app.pkg.toLowerCase(Locale.ROOT), l = app.label.toLowerCase(Locale.ROOT);
+            for (String alias : aliases) {
+                if (p.contains(alias) || l.contains(alias)) return rest.remove(i);
+            }
+        }
+        return App.placeholder(this, id, label, tint);
     }
 
     /** Fills the dock and grid from order; returns the dock list. */
@@ -304,6 +326,10 @@ public class HomeActivity extends Activity {
     }
 
     private void launch(App a, View from) {
+        if (a.launch == null) {
+            Toast.makeText(this, "Hold OK, then press Down to swap this shortcut with an installed app", Toast.LENGTH_LONG).show();
+            return;
+        }
         try {
             ActivityOptions o = ActivityOptions.makeScaleUpAnimation(from, 0, 0, from.getWidth(), from.getHeight());
             startActivity(a.launch, o.toBundle());
@@ -396,7 +422,16 @@ public class HomeActivity extends Activity {
         if (moving) { setMoving(false); return; }
         switch (area) {
             case DOCK:
-                if (dockIdx < dockAdapter.getItemCount()) launch(dockAdapter.apps.get(dockIdx), focusedBanner);
+                if (dockIdx < dockAdapter.getItemCount()) {
+                    App app = dockAdapter.apps.get(dockIdx);
+                    if (app.pkg.equals(App.ALL_APPS)) {
+                        if (gridAdapter.getItemCount() > 0) {
+                            area = Area.GRID;
+                            gridIdx = 0;
+                            applyFocus(true);
+                        } else Toast.makeText(this, "No other apps installed", Toast.LENGTH_SHORT).show();
+                    } else launch(app, focusedBanner);
+                }
                 break;
             case GRID:
                 if (gridIdx < gridAdapter.getItemCount()) launch(gridAdapter.apps.get(gridIdx), focusedBanner);
@@ -432,6 +467,7 @@ public class HomeActivity extends Activity {
 
     private void setMoving(boolean on) {
         if (moving == on) return;
+        if (on && position() == DOCK_SIZE - 1) return;  // All Applications never moves.
         moving = on;
         if (on) {
             App a = order.get(position());
@@ -472,6 +508,7 @@ public class HomeActivity extends Activity {
             else return;
         }
         if (q == p) return;
+        if (q == DOCK_SIZE - 1 || p == DOCK_SIZE - 1) return;
         if (swap) {
             App a = order.get(p);
             order.set(p, order.get(q));
@@ -502,13 +539,13 @@ public class HomeActivity extends Activity {
         if (moving) setMoving(false);
         else if (area == Area.MENU) closeMenu();
         else if (area != Area.DOCK && dockAdapter.getItemCount() > 0) { area = Area.DOCK; applyFocus(true); }
-        else startDream();
+        // No action on Home: a safe Back key must not replace the chosen system Home.
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (WakeRouter.isWake(intent)) { routeWake(); return; }
+        // No wake-to-HDMI routing on the Shield.
         // Home pressed while already home: back to the dock. Coming back from an app keeps
         // the last focused tile.
         if (resumed) {
@@ -898,7 +935,7 @@ public class HomeActivity extends Activity {
 
     /** Network changes arrive as events; nothing polls. */
     private final ConnectivityManager.NetworkCallback network =
-            new ConnectivityManager.NetworkCallback(ConnectivityManager.NetworkCallback.FLAG_INCLUDE_LOCATION_INFO) {
+            new ConnectivityManager.NetworkCallback() {
         @Override
         public void onCapabilitiesChanged(Network n, NetworkCapabilities caps) {
             String label;

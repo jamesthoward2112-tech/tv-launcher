@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, howardtv-v1]
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -24,6 +24,9 @@ jobs:
       - name: Install SDK packages
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" >/dev/null
 
+      - name: HowardTV source and asset checks
+        run: python3 -m unittest discover -s tests -v
+
       # Signs with the fixed release key from repository secrets, so each release installs
       # over the last. Pull requests from forks get no secrets and fall back to a debug key.
       - name: Build
@@ -39,13 +42,13 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: tv-launcher-apk
-          path: launcher.apk
+          name: HowardTV-test-apk
+          path: HowardTV.apk
 
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp launcher.apk "tv-launcher-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "tv-launcher-${GITHUB_REF_NAME}.apk" --generate-notes
+          cp HowardTV.apk "HowardTV-${GITHUB_REF_NAME}.apk"
+          gh release create "$GITHUB_REF_NAME" "HowardTV-${GITHUB_REF_NAME}.apk" --generate-notes

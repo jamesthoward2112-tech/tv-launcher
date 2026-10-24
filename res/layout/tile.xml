@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- One app: banner plus the name that shows under it while focused (grid only). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="206dp" android:layout_height="wrap_content" android:orientation="vertical"
+    android:layout_width="104dp" android:layout_height="wrap_content" android:orientation="vertical"
     android:clipChildren="false">
     <ImageView android:id="@+id/banner" android:layout_width="@dimen/tile_w" android:layout_height="@dimen/tile_h"
         android:background="#FF1E1E21" android:scaleType="centerCrop" />
     <TextView android:id="@+id/name" android:layout_width="@dimen/tile_w" android:layout_height="wrap_content"
-        android:layout_marginTop="12dp" android:gravity="center" android:singleLine="true" android:ellipsize="end"
+        android:layout_marginTop="9dp" android:gravity="center" android:singleLine="true" android:ellipsize="end"
         android:textColor="#FFE6E6EA" android:textSize="14sp" android:alpha="0" />
 </LinearLayout>
